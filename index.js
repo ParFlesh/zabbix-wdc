@@ -18,26 +18,26 @@
 
 		var jobs = 0;
 
-		parseCols = function(response, status, method) {
+		parseCols = function(response, status, apiCall) {
 			var cols = [];
 			if (Array.isArray(response.result)) {
 				for (var key in response.result[0]) {
 				   cols.push({id:key,alias:key,dataType:tableau.dataTypeEnum.string}); 
 				};
 			};
-			tableInfo.push({id:method,alias:method,columns:cols});
+			tableInfo.push({id:apiCall.id,alias:apiCall.alias,description:apiCall.description,columns:cols});
 			jobs--;
 			tableau.log(tableInfo);
 		};
 		
-		apiCall = function(method,params){
-			server.sendAjaxRequest(method+'.get',params,function(a,b){parseCols(a,b,method)},errorMethod(server));
+		apiCall = function(apiCall){
+			server.sendAjaxRequest(apiCall.method+'.get',apiCall.params,function(a,b){parseCols(a,b,apiCall)},errorMethod);
 		};
 		
 		for (var i = 0, len = data.apiCalls.length; i < len; i++) {
 			jobs++;
 			var n = i;
-			apiCall(data.apiCalls[n].method,data.apiCalls[n].params)
+			apiCall(data.apiCalls[n])
 		};
 
 		waitForComplete = function() {
@@ -56,6 +56,7 @@
 
     myConnector.getData = function (table, doneCallback) {
         parseData = function (response, status) {
+			tableau.reportProgress('Parsing Data')
             table.appendRows(response.result);
             doneCallback();
         }
@@ -65,21 +66,15 @@
 
         server.setAuth(data.auth);
 		
-		var apiCall = data.apiCalls.filter(function(a){return table.tableInfo.alias == a.method})
+		var apiCall = data.apiCalls.filter(function(a){return table.tableInfo.id == a.id})
 
 
-        server.sendAjaxRequest(apiCall[0].method+'.get',apiCall[0].params,parseData,errorMethod(server));
+        server.sendAjaxRequest(apiCall[0].method+'.get',apiCall[0].params,parseData,errorMethod);
     };
 
-    errorMethod = function(server) {
+    errorMethod = function(response,status) {
 
-        var errormsg = [];
-
-        $.each(server.isError(), function(key, value) {
-            errormsg.push({key:key, value:value});
-        });
-
-        tableau.log(errormsg);
+        tableau.abortWithError(response);
     }
 
     setupConnector = function() {
@@ -105,7 +100,7 @@
         };
 
         for (var i = 1; i <= counter; i++) {
-            options.apiCalls.push({method:$('#method'+i).val().trim(),params:JSON.parse($('#params'+i).val().trim())});
+            options.apiCalls.push({id:i,alias:$('#alias'+i).val().trim(),description:$('#description'+i).val().trim(),method:$('#method'+i).val().trim(),params:JSON.parse($('#params'+i).val().trim())});
         };
 	
         tableau.connectionData = JSON.stringify(options);
@@ -120,7 +115,7 @@
     addInput = function(divName){
           counter++;
           var newdiv = document.createElement('div');
-          newdiv.innerHTML = "<fieldset><legend>API Call " + counter + "</legend><input type=\"text\" id=\"method"+counter+"\" class=\"form-control\" placeholder=\"host\"><input type=\"text\" id=\"params"+counter+"\" class=\"form-control\" id=\"params\" placeholder=\"{}\"></fieldset>";
+          newdiv.innerHTML = "<fieldset><legend>API Call " + counter + "</legend><input type=\"text\" id=\"alias"+counter+"\" class=\"form-control\" placeholder=\"host\"><input type=\"text\" id=\"description"+counter+"\" class=\"form-control\" placeholder=\"\"><input type=\"text\" id=\"method"+counter+"\" class=\"form-control\" placeholder=\"host\"><input type=\"text\" id=\"params"+counter+"\" class=\"form-control\" id=\"params\" placeholder=\"{}\"></fieldset>";
           document.getElementById(divName).appendChild(newdiv);
      }
 
