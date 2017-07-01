@@ -1,6 +1,8 @@
 (function () {
     var myConnector = tableau.makeConnector();
 
+	var options = new Object();
+
     myConnector.getSchema = function (schemaCallback) {
 
 		var data = JSON.parse(tableau.connectionData);
@@ -77,7 +79,7 @@
         tableau.abortWithError(response);
     }
 
-    setupConnector = function() {
+    setupConnector = function(callBack) {
         var options = {
             'url': $('#url').val().trim(),
             'user':$('#user').val().trim(),
@@ -86,19 +88,30 @@
 
         server = new $.jqzabbix(options);
         server.getApiVersion();
-        server.userLogin(null,getToken);
+        server.userLogin(null,function(r,s){getToken(r,s,callBack)});
         //tableau.connectionData = JSON.stringify(zabbixConnection);
         //tableau.connectionName = 'Zabbix';
         //tableau.submit();
     };
 
-    getToken = function(response, status) {
-        var options = {
+    getToken = function(response, status, callBack) {
+        options = {
             'url': $('#url').val().trim(),
             'auth': response.result,
             apiCalls:[]
         };
+		
+		$('#connTabs').hide();
+		$('#apiTabs').show();
+		
+		if (callBack) {
+			callBack(options);
+		} else { 
+			return;
+		};
+	};
 
+	getAPICalls = function(options) {
         for (var i = 1; i <= counter; i++) {
             options.apiCalls.push({id:i,alias:$('#alias'+i).val().trim(),description:$('#description'+i).val().trim(),method:$('#method'+i).val().trim(),params:JSON.parse($('#params'+i).val().trim())});
         };
@@ -112,15 +125,30 @@
 
     var counter = 1;
     var limit = 3;
-    addInput = function(divName){
+    addTab = function(){
+		console.log('addTab')
           counter++;
-          var newdiv = document.createElement('div');
-          newdiv.innerHTML = "<fieldset><legend>API Call " + counter + "</legend><input type=\"text\" id=\"alias"+counter+"\" class=\"form-control\" placeholder=\"host\"><input type=\"text\" id=\"description"+counter+"\" class=\"form-control\" placeholder=\"\"><input type=\"text\" id=\"method"+counter+"\" class=\"form-control\" placeholder=\"host\"><input type=\"text\" id=\"params"+counter+"\" class=\"form-control\" id=\"params\" placeholder=\"{}\"></fieldset>";
-          document.getElementById(divName).appendChild(newdiv);
+          var newdiv = document.createElement('div')
+		  newdiv.id = 'table'+counter+'Tab';
+          document.getElementById('tableContainer').appendChild(newdiv);
+		  var newdiv = document.getElementById('table'+counter+'Tab');
+          newdiv.outerHTML = '<div id="table'+counter+'Tab" aria-labelledby="tab_table'+counter+'" class="ui-tabs-panel ui-widget-content ui-corner-bottom" role="tabpanel" aria-expanded="false" aria-hidden="true" style="display: none;"><ul class="table-forms"><li><div class="table-forms-td-left"><label for="alias'+counter+'">Alias</label></div><div class="table-forms-td-right"><input type="text" id="alias'+counter+'" name="alias'+counter+'" value="Zabbix Hosts" maxlength="128" style="width: 453px;"></div></li><li><div class="table-forms-td-left"><label for="description'+counter+'">Description</label></div><div class="table-forms-td-right"><input type="text" id="description'+counter+'" name="description'+counter+'" value="Zabbix Hosts" maxlength="128" style="width: 453px;"></div></li><li><div class="table-forms-td-left"><label for="method'+counter+'">Method</label></div><div class="table-forms-td-right"><input type="text" id="method'+counter+'" name="method'+counter+'" value="host" maxlength="128" style="width: 453px;"></div></li><li><div class="table-forms-td-left"><label for="params'+counter+'">Params</label></div><div class="table-forms-td-right"><input type="text" id="params'+counter+'" name="params'+counter+'" value="{}" maxlength="128" style="width: 453px;"></div></li></ul></div>';
+		  
+		  var newdiv = document.createElement('li');
+		  newdiv.innerHTML = '<li class="ui-state-default ui-corner-top" role="tab" tabindex="'+counter+'" aria-controls="apiCall'+counter+'Tab" aria-labelledby="tab_table'+counter+'Tab" aria-selected="false"><a id="tab_table'+counter+'" onclick="changeTab(\'#table'+counter+'Tab\')" class="ui-tabs-anchor" role="presentation" tabindex="'+counter+'">API Call '+counter+'</a></li>'
+		  document.getElementById('tabList').appendChild(newdiv);
      }
+	 
+	 changeTab = function(tabName) {
+		 console.log(tabName)
+		 for (var i = 1, len = counter+1; i < len; i++) {
+			$('#table'+i+'Tab').hide();
+		 };
+		 $(tabName).show();
+	 };
 
     $(document).ready(function () {
-        $("#submitButton").click(function () {
+        $("#connect").click(function () {
             setupConnector();
         });
         $('#zabbixForm').submit(function(event) {
