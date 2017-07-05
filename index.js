@@ -14,7 +14,7 @@
 
 		server.setAuth(data.auth);
 		
-		server.setOptions({timeout:60000})
+		server.setOptions({timeout:300000})
 
 		var tableInfo = new Array();
 
@@ -101,6 +101,8 @@
             apiCalls:[]
         };
 		
+		tableau.connectionName = $('#connectionName').val().trim();
+		
 		$('#connTabs').hide();
 		$('#apiTabs').show();
 		
@@ -110,14 +112,17 @@
 			return;
 		};
 	};
+	
+	submitConnector = function() {
+		getAPICalls();
+	};
 
-	getAPICalls = function(options) {
+	getAPICalls = function() {
         for (var i = 1; i <= counter; i++) {
             options.apiCalls.push({id:i,alias:$('#alias'+i).val().trim(),description:$('#description'+i).val().trim(),method:$('#method'+i).val().trim(),params:JSON.parse($('#params'+i).val().trim())});
         };
 	
         tableau.connectionData = JSON.stringify(options);
-        tableau.connectionName = 'Zabbix';
         tableau.submit();
     };
 
@@ -132,7 +137,7 @@
 		  newdiv.id = 'table'+counter+'Tab';
           document.getElementById('tableContainer').appendChild(newdiv);
 		  var newdiv = document.getElementById('table'+counter+'Tab');
-          newdiv.outerHTML = '<div id="table'+counter+'Tab" aria-labelledby="tab_table'+counter+'" class="ui-tabs-panel ui-widget-content ui-corner-bottom" role="tabpanel" aria-expanded="false" aria-hidden="true" style="display: none;"><ul class="table-forms"><li><div class="table-forms-td-left"><label for="alias'+counter+'">Alias</label></div><div class="table-forms-td-right"><input type="text" id="alias'+counter+'" name="alias'+counter+'" value="Zabbix Hosts" maxlength="128" style="width: 453px;"></div></li><li><div class="table-forms-td-left"><label for="description'+counter+'">Description</label></div><div class="table-forms-td-right"><input type="text" id="description'+counter+'" name="description'+counter+'" value="Zabbix Hosts" maxlength="128" style="width: 453px;"></div></li><li><div class="table-forms-td-left"><label for="method'+counter+'">Method</label></div><div class="table-forms-td-right"><input type="text" id="method'+counter+'" name="method'+counter+'" value="host" maxlength="128" style="width: 453px;"></div></li><li><div class="table-forms-td-left"><label for="params'+counter+'">Params</label></div><div class="table-forms-td-right"><input type="text" id="params'+counter+'" name="params'+counter+'" value="{}" maxlength="128" style="width: 453px;"></div></li></ul></div>';
+          newdiv.outerHTML = '<div id="table'+counter+'Tab" aria-labelledby="tab_table'+counter+'" class="ui-tabs-panel ui-widget-content ui-corner-bottom" role="tabpanel" aria-expanded="false" aria-hidden="true" style="display: none;"><ul class="table-forms"><li><div class="table-forms-td-left"><label for="alias'+counter+'div">Alias</label></div><div class="table-forms-td-right"><input type="text" id="alias'+counter+'" name="alias'+counter+'" value="Zabbix Hosts" maxlength="128" style="width: 453px;"></div></li><li><div class="table-forms-td-left"><label for="description'+counter+'div">Description</label></div><div class="table-forms-td-right"><input type="text" id="description'+counter+'" name="description'+counter+'" value="Zabbix Hosts" maxlength="128" style="width: 453px;"></div></li><li><div class="table-forms-td-left"><label for="method'+counter+'div">Method</label></div><div class="table-forms-td-right"><input type="text" id="method'+counter+'" name="method'+counter+'" value="host" maxlength="128" style="width: 453px;"></div></li><li><div class="table-forms-td-left"><label for="params'+counter+'div">Params</label></div><div class="table-forms-td-right"><input type="text" id="params'+counter+'" name="params'+counter+'" value="{}" maxlength="128" style="width: 453px;"></div></li></ul></div>';
 		  
 		  var newdiv = document.createElement('li');
 		  newdiv.innerHTML = '<li class="ui-state-default ui-corner-top" role="tab" tabindex="'+counter+'" aria-controls="apiCall'+counter+'Tab" aria-labelledby="tab_table'+counter+'Tab" aria-selected="false"><a id="tab_table'+counter+'" onclick="changeTab(\'#table'+counter+'Tab\')" class="ui-tabs-anchor" role="presentation" tabindex="'+counter+'">API Call '+counter+'</a></li>'
