@@ -119,7 +119,7 @@
 
 	getAPICalls = function() {
         for (var i = 1; i <= counter; i++) {
-            options.apiCalls.push({id:i,alias:$('#alias'+i).val().trim(),description:$('#description'+i).val().trim(),method:$('#method'+i).val().trim(),params:JSON.parse($('#params'+i).val().trim())});
+            options.apiCalls.push({id:i.toString(),alias:$('#alias'+i).val().trim(),description:$('#description'+i).val().trim(),method:$('#method'+i).val().trim(),params:JSON.parse($('#params'+i).val().trim())});
         };
 	
         tableau.connectionData = JSON.stringify(options);
