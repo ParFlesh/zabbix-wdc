@@ -20,12 +20,14 @@
 			var idRegex = /.*id/i;
 			
 			addColumns = function(method,filter) {
+				//console.log(method,filter)
 				 for (var ai = 0, keys = Object.keys(methods[method]), alen = keys.length; ai < alen; ai++) {
 					 if (filter) {
-						 if (filter.indexOf(methods[method][keys[ai]]) != -1 || keys[ai].match(idRegex)) {
+						 //console.log('filter',filter.indexOf(methods[method][keys[ai]]),keys[ai])
+						 if (filter.indexOf(keys[ai]) != -1 || keys[ai].match(idRegex)) {
 							table.columns.push(methods[method][keys[ai]])
 						 }
-					 } else {
+					 } else { 
 						 table.columns.push(methods[method][keys[ai]])
 					 };
 				};
@@ -67,27 +69,8 @@
 
     myConnector.getData = function (table, doneCallback) {
 
-		renameKeys = function(object,subKey) {
-			var iKeys = Object.keys(object)
-			var output = {};
-			for (var ki = 0, klen = iKeys.length; ki < klen; ki++) {
-				 output[subKey+':'+iKeys[ki]] = object[iKeys[ki]] 
-			};
-			return output
-		};
-
-		mergeArrays = function(a,b,subKey) {
-			var output = []
-			for (var ai = 0, alen = a.length;ai < alen; ai++) {
-				for (var bi = 0, blen = b.length; bi < blen; bi++) {
-					output.push(Object.assign({},a[ai],renameKeys(b[bi],subKey)))
-				};
-			};
-			return output;
-		};
-
 		mergeObject = function(array,object,subKey) {
-			console.log(array)
+			//console.log(array)
 			var output = []; 
 			new Promise(function(resolve,reject){
 				for (var i = 0, len = array.length; i < len; i++) {
@@ -96,16 +79,35 @@
 				resolve(output)
 			});
 		};
+		
+		mergeArrays = function(a,b,subKey) {
+			return Promise.all(a.map(function(aitem){
+				return mergeObjectArray(aitem,b,subKey);
+			})).then(function(res){return [].concat.apply([],res)});
+		};
+
+		mergeObjectArray = function(object,array,subKey) {
+			return Promise.all(array.map(function(bitem){
+				return renameKeys(bitem,subKey).then(function(res){return Object.assign({},object,res)})
+			}));
+		};
+
+		renameKeys = function(object,subKey){
+			var keys = Object.keys(object)
+			var new_object = {};
+			return Promise.all(keys.map(function(item){
+					new_object[subKey+':'+item] = object[item]
+					return new_object;
+			})).then(function(res){
+				return Promise.resolve(new_object)
+			})
+		};
 
 		addKey = function(array,key,value,subKey) {
-			console.log('array',array)
-			new_array = []
 			return array.reduce(function(promise,item) {
 				return promise.then(function(result) {
-					console.log('item',item)
 					item[subKey+':'+key] = value
 					result.push(item)
-					console.log('result',result)
 					return result
 				})
 			},Promise.resolve([]))
@@ -116,13 +118,10 @@
 			 
 			return iKeys.reduce(function(promise, item) {
 				return promise.then(function(result) {
-					//return doSomethingAsyncWithResult(item, result);
 					if (Array.isArray(arr[item])) {
-						//return mergeArrays(result,arr[item],item)
-						return result
+						return mergeArrays(result,arr[item],arrayTranslate[item])
                     } else if (typeof arr[item] == 'object') {
-						//return mergeObject(result,arr[item],item)
-						return result
+						return mergeObject(result,arr[item],item)
                     } else {
 						return addKey(result,item,arr[item],'host');
                     }
@@ -147,17 +146,6 @@
 		};
 
 		parseData = function (result) {
-			/*return new Promise(function(resolve,reject) {
-				//tableau.log(JSON.stringify(result))
-				tableau.reportProgress('Parsing Data');
-				var promises = [];
-				for (var i = 0, len = result.length; i < len; i++) {
-						promises.push(flattenEntry(entry,apiCall[0].method))
-				};
-				tableau.log(rows)
-				table.appendRows(rows);
-				Promise.all(promises).then(resolve)
-			})*/
 			return result.reduce(function(promise,item){
 				return promise.then(function(result){
 					return flattenEntry(item)
@@ -177,8 +165,10 @@
     };
 
     errorMethod = function(response) {
-		tableau.log(response)
-        tableau.abortWithError(response);
+		new Promise(function(resolve,reject){
+			tableau.log(response)
+			resolve(response)
+		});
     }
 
     setupConnector = function(callBack) {
@@ -196,9 +186,12 @@
     };
 
     authComplete = function(token) {
-		options.auth = token
-		document.getElementById('connTabs').style.display = 'none';
-		document.getElementById('apiTabs').style.display = null; 
+		new Promise(function(resolve,reject){
+			options.auth = token
+			document.getElementById('connTabs').style.display = 'none';
+			document.getElementById('apiTabs').style.display = null; 
+			resolve(true)
+		})
 	};
 	
 	submitConnector = function() {
@@ -226,7 +219,6 @@
     var counter = 1;
     var limit = 3;
     addTab = function(){
-		console.log('addTab')
           counter++;
           var newdiv = document.createElement('div')
 		  newdiv.id = 'table'+counter+'Tab';
@@ -246,6 +238,10 @@
 		 document.getElementById(tabName).style.display = null;
 	 };
 	
+	arrayTranslate = {
+		'items':'item'
+	}
+
 	selectTranslate = {
 		'selectItems': 'item',
 		'selectGroups':'hostgroup'
@@ -410,6 +406,14 @@
 				description:'ID of the item.',
 				id:'item:itemid',
 				numberFormat:tableau.numberFormatEnum.number
+			},
+			name:{
+				alias: 'Name',
+				columnRole:tableau.columnRoleEnum.dimension,
+				columnType:tableau.columnTypeEnum.discrete,
+				dataType:tableau.dataTypeEnum.string ,
+				description:'Technical name of the Item.',
+				id:'item:name' 
 			}
 		}
 	}
