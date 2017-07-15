@@ -1,5 +1,38 @@
 (function () {
     var myConnector = tableau.makeConnector();
+	
+	if (!Object.assign) {
+	  Object.defineProperty(Object, 'assign', {
+		enumerable: false,
+		configurable: true,
+		writable: true,
+		value: function(target) {
+		  'use strict';
+		  if (target === undefined || target === null) {
+			throw new TypeError('Cannot convert first argument to object');
+		  }
+
+		  var to = Object(target);
+		  for (var i = 1; i < arguments.length; i++) {
+			var nextSource = arguments[i];
+			if (nextSource === undefined || nextSource === null) {
+			  continue;
+			}
+			nextSource = Object(nextSource);
+
+			var keysArray = Object.keys(Object(nextSource));
+			for (var nextIndex = 0, len = keysArray.length; nextIndex < len; nextIndex++) {
+			  var nextKey = keysArray[nextIndex];
+			  var desc = Object.getOwnPropertyDescriptor(nextSource, nextKey);
+			  if (desc !== undefined && desc.enumerable) {
+				to[nextKey] = nextSource[nextKey];
+			  }
+			}
+		  }
+		  return to;
+		}
+	  });
+	}
 
 	var options = new Object();
 
@@ -96,7 +129,7 @@
 			var keys = Object.keys(object)
 			var new_object = {};
 			return Promise.all(keys.map(function(item){
-					new_object[subKey+':'+item] = object[item]
+					new_object[subKey+'_'+item] = object[item]
 					return new_object;
 			})).then(function(res){
 				return Promise.resolve(new_object)
@@ -106,7 +139,7 @@
 		addKey = function(array,key,value,subKey) {
 			return array.reduce(function(promise,item) {
 				return promise.then(function(result) {
-					item[subKey+':'+key] = value
+					item[subKey+'_'+key] = value
 					result.push(item)
 					return result
 				})
@@ -256,7 +289,7 @@
 				columnType:tableau.columnTypeEnum.discrete,
 				dataType:tableau.dataTypeEnum.int ,
 				description:'Action ID',
-				id:'action:actionid',
+				id:'action_actionid',
 				numberFormat:tableau.numberFormatEnum.number
 			},
 			esc_period: {
@@ -266,7 +299,7 @@
 				columnType:tableau.columnTypeEnum.discrete,
 				dataType:tableau.dataTypeEnum.int ,
 				description:'Escalation Period',
-				id:'action:esc_period',
+				id:'action_esc_period',
 				numberFormat:tableau.numberFormatEnum.number
 			},
 			eventsource:{
@@ -276,7 +309,7 @@
 				columnType:tableau.columnTypeEnum.discrete,
 				dataType:tableau.dataTypeEnum.int ,
 				description:'Event Source',
-				id:'action:eventsource',
+				id:'action_eventsource',
 				numberFormat:tableau.numberFormatEnum.number
 			}
 		},
@@ -288,7 +321,7 @@
 				columnType:tableau.columnTypeEnum.discrete,
 				dataType:tableau.dataTypeEnum.int ,
 				description:'ID of the host.',
-				id:'host:hostid',
+				id:'host_hostid',
 				numberFormat:tableau.numberFormatEnum.number
 			},
 			host:{
@@ -297,7 +330,7 @@
 				columnType:tableau.columnTypeEnum.discrete,
 				dataType:tableau.dataTypeEnum.string ,
 				description:'Technical name of the host.',
-				id:'host:host' 
+				id:'host_host' 
 			},
 			available:{
 				alias: 'Available',
@@ -305,7 +338,7 @@
 				columnType:tableau.columnTypeEnum.discrete,
 				dataType:tableau.dataTypeEnum.int ,
 				description:'Availability of Zabbix agent. \n\nPossible values are:\n0 - (default) unknown;\n1 - available;\n2 - unavailable.',
-				id:'host:available',
+				id:'host_available',
 				numberFormat:tableau.numberFormatEnum.number
 			},
 			description:{
@@ -314,7 +347,7 @@
 				columnType:tableau.columnTypeEnum.discrete,
 				dataType:tableau.dataTypeEnum.string ,
 				description:'Description of the host.',
-				id:'host:description' 
+				id:'host_description' 
 			},
 			disable_until:{
 				alias: 'Disable Until',
@@ -331,7 +364,7 @@
 				columnType:tableau.columnTypeEnum.discrete,
 				dataType:tableau.dataTypeEnum.string ,
 				description:'Error text if Zabbix agent is unavailable.',
-				id:'host:error' 
+				id:'host_error' 
 			},
 			errors_from:{
 				alias: 'Errors From',
@@ -339,7 +372,7 @@
 				columnType:tableau.columnTypeEnum.discrete,
 				dataType:tableau.dataTypeEnum.int ,
 				description:'Time when Zabbix agent became unavailable.',
-				id:'host:errors_from',
+				id:'host_errors_from',
 				numberFormat:tableau.numberFormatEnum.number
 			},
 			flags:{
@@ -348,7 +381,7 @@
 				columnType:tableau.columnTypeEnum.discrete,
 				dataType:tableau.dataTypeEnum.int ,
 				description:'Origin of the host. \n\nPossible values: \n0 - a plain host; \n4 - a discovered host.',
-				id:'host:flags',
+				id:'host_flags',
 				numberFormat:tableau.numberFormatEnum.number
 			},
 			inventory_mode:{
@@ -357,7 +390,7 @@
 				columnType:tableau.columnTypeEnum.discrete,
 				dataType:tableau.dataTypeEnum.int ,
 				description:'Host inventory population mode. \n\nPossible values are: \n-1 - disabled; \n0 - (default) manual; \n1 - automatic.',
-				id:'host:inventory_mode',
+				id:'host_inventory_mode',
 				numberFormat:tableau.numberFormatEnum.number
 			},
 			ipmi_authtype:{
@@ -366,7 +399,7 @@
 				columnType:tableau.columnTypeEnum.discrete,
 				dataType:tableau.dataTypeEnum.int ,
 				description:'IPMI authentication algorithm. \n\nPossible values are:\n-1 - (default) default; \n0 - none; \n1 - MD2; \n2 - MD5 \n4 - straight; \n5 - OEM; \n6 - RMCP+.',
-				id:'host:ipmi_authtype',
+				id:'host_ipmi_authtype',
 				numberFormat:tableau.numberFormatEnum.number
 			},
 			ipmi_available:{
@@ -375,7 +408,7 @@
 				columnType:tableau.columnTypeEnum.discrete,
 				dataType:tableau.dataTypeEnum.int ,
 				description:'Availability of IPMI agent. \n\nPossible values are:\n0 - (default) unknown;\n1 - available;\n2 - unavailable.',
-				id:'host:ipmi_available',
+				id:'host_ipmi_available',
 				numberFormat:tableau.numberFormatEnum.number
 			},
 			ipmi_disable_until:{
@@ -384,7 +417,7 @@
 				columnType:tableau.columnTypeEnum.discrete,
 				dataType:tableau.dataTypeEnum.int ,
 				description:'The next polling time of an unavailable IPMI agent.',
-				id:'host:ipmi_disable_until',
+				id:'host_ipmi_disable_until',
 				numberFormat:tableau.numberFormatEnum.number
 			},
 			ipmi_error:{
@@ -393,7 +426,7 @@
 				columnType:tableau.columnTypeEnum.discrete,
 				dataType:tableau.dataTypeEnum.string ,
 				description:'Error text if IPMI agent is unavailable.',
-				id:'host:ipmi_error' 
+				id:'host_ipmi_error' 
 			} 
 		},
 		item:{
@@ -404,7 +437,7 @@
 				columnType:tableau.columnTypeEnum.discrete,
 				dataType:tableau.dataTypeEnum.int ,
 				description:'ID of the item.',
-				id:'item:itemid',
+				id:'item_itemid',
 				numberFormat:tableau.numberFormatEnum.number
 			},
 			name:{
@@ -413,7 +446,7 @@
 				columnType:tableau.columnTypeEnum.discrete,
 				dataType:tableau.dataTypeEnum.string ,
 				description:'Technical name of the Item.',
-				id:'item:name' 
+				id:'item_name' 
 			}
 		}
 	}
