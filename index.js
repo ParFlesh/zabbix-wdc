@@ -1,125 +1,246 @@
 (function () {
     var myConnector = tableau.makeConnector();
+	
+	if (!Object.assign) {
+	  Object.defineProperty(Object, 'assign', {
+		enumerable: false,
+		configurable: true,
+		writable: true,
+		value: function(target) {
+		  'use strict';
+		  if (target === undefined || target === null) {
+			throw new TypeError('Cannot convert first argument to object');
+		  }
+
+		  var to = Object(target);
+		  for (var i = 1; i < arguments.length; i++) {
+			var nextSource = arguments[i];
+			if (nextSource === undefined || nextSource === null) {
+			  continue;
+			}
+			nextSource = Object(nextSource);
+
+			var keysArray = Object.keys(Object(nextSource));
+			for (var nextIndex = 0, len = keysArray.length; nextIndex < len; nextIndex++) {
+			  var nextKey = keysArray[nextIndex];
+			  var desc = Object.getOwnPropertyDescriptor(nextSource, nextKey);
+			  if (desc !== undefined && desc.enumerable) {
+				to[nextKey] = nextSource[nextKey];
+			  }
+			}
+		  }
+		  return to;
+		}
+	  });
+	}
 
 	var options = new Object();
 
     myConnector.getSchema = function (schemaCallback) {
 
 		var data = JSON.parse(tableau.connectionData);
-		tableau.log(data);
-
-		server = new $.jqzabbix({url:data.url,limit:1});
-
-		server.getApiVersion();
-
-		server.setAuth(data.auth);
 		
-		server.setOptions({timeout:300000})
-
-		var tableInfo = new Array();
-
-		var jobs = 0;
-
-		parseCols = function(response, status, apiCall) {
-			var cols = [];
-			if (Array.isArray(response.result)) {
-				for (var key in response.result[0]) {
-				   cols.push({id:key,alias:key,dataType:tableau.dataTypeEnum.string}); 
+		var tables = [];
+		
+		parseApiCall = function(apiCall) {
+			var table = {
+				id:apiCall.id,
+				alias:apiCall.alias,
+				description:apiCall.description,
+				columns:[]
+			};
+			
+			var idRegex = /.*id/i;
+			
+			addColumns = function(method,filter) {
+				//console.log(method,filter)
+				 for (var ai = 0, keys = Object.keys(methods[method]), alen = keys.length; ai < alen; ai++) {
+					 if (filter) {
+						 //console.log('filter',filter.indexOf(methods[method][keys[ai]]),keys[ai])
+						 if (filter.indexOf(keys[ai]) != -1 || keys[ai].match(idRegex)) {
+							table.columns.push(methods[method][keys[ai]])
+						 }
+					 } else { 
+						 table.columns.push(methods[method][keys[ai]])
+					 };
 				};
 			};
-			tableInfo.push({id:apiCall.id,alias:apiCall.alias,description:apiCall.description,columns:cols});
-			jobs--;
-			tableau.log(tableInfo);
-		};
-		
-		apiCall = function(apiCall){
-			server.sendAjaxRequest(apiCall.method+'.get',apiCall.params,function(a,b){parseCols(a,b,apiCall)},errorMethod);
+			
+			if (apiCall.params.output == 'extend') {
+				addColumns(apiCall.method);
+			} else if (Array.isArray(apiCall.params.output)) {
+				addColumns(apiCall.method,apiCall.params.output);
+			} else {
+				addColumns(apiCall.method);
+			};
+
+			pKeys = Object.keys(apiCall.params)
+			selectRegex = /^select(.*)/i;
+
+			for (var pi = 0, plen = pKeys.length; pi < plen; pi++) {
+				if (pKeys[pi].match(selectRegex)) {
+					switch (apiCall.params[pKeys[pi]]) {
+						case 'extend':
+							addColumns(selectTranslate[pKeys[pi]]);
+							break;
+						default:
+							addColumns(selectTranslate[pKeys[pi]],apiCall.params[pKeys[pi]]);
+							break;
+					}
+				};
+			};
+ 
+			return table; 
 		};
 		
 		for (var i = 0, len = data.apiCalls.length; i < len; i++) {
-			jobs++;
-			var n = i;
-			apiCall(data.apiCalls[n])
+			tables.push(parseApiCall(data.apiCalls[i]));
 		};
 
-		waitForComplete = function() {
-			//tableau.log(jobs);
-			if (jobs == 0) {
-				schemaCallback(tableInfo);
-			} else {
-				setTimeout(waitForComplete,1000);
-				tableau.log('waiting');
-			}
-		};
-		
-		setTimeout(waitForComplete,2000); 
-	
+		schemaCallback(tables);
 	};
 
     myConnector.getData = function (table, doneCallback) {
-        parseData = function (response, status) {
-			tableau.reportProgress('Parsing Data')
-            table.appendRows(response.result);
-            doneCallback();
-        }
+
+		mergeObject = function(array,object,subKey) {
+			//console.log(array)
+			var output = []; 
+			new Promise(function(resolve,reject){
+				for (var i = 0, len = array.length; i < len; i++) {
+					output.push(Object.assign({},array[i],renameKeys(object,subKey)))
+				};
+				resolve(output)
+			});
+		};
+		
+		mergeArrays = function(a,b,subKey) {
+			return Promise.all(a.map(function(aitem){
+				return mergeObjectArray(aitem,b,subKey);
+			})).then(function(res){return [].concat.apply([],res)});
+		};
+
+		mergeObjectArray = function(object,array,subKey) {
+			return Promise.all(array.map(function(bitem){
+				return renameKeys(bitem,subKey).then(function(res){return Object.assign({},object,res)})
+			}));
+		};
+
+		renameKeys = function(object,subKey){
+			var keys = Object.keys(object)
+			var new_object = {};
+			return Promise.all(keys.map(function(item){
+					new_object[subKey+'_'+item] = object[item]
+					return new_object;
+			})).then(function(res){
+				return Promise.resolve(new_object)
+			})
+		};
+
+		addKey = function(array,key,value,subKey) {
+			return array.reduce(function(promise,item) {
+				return promise.then(function(result) {
+					item[subKey+'_'+key] = value
+					result.push(item)
+					return result
+				})
+			},Promise.resolve([]))
+		};
+
+		flattenEntry = function(arr) {
+			var iKeys = Object.keys(arr);
+			 
+			return iKeys.reduce(function(promise, item) {
+				return promise.then(function(result) {
+					if (Array.isArray(arr[item])) {
+						return mergeArrays(result,arr[item],arrayTranslate[item])
+                    } else if (typeof arr[item] == 'object') {
+						return mergeObject(result,arr[item],item)
+                    } else {
+						return addKey(result,item,arr[item],'host');
+                    }
+				});        
+			}, Promise.resolve([{}]));
+		}
+        
         var data = JSON.parse(tableau.connectionData);
 
-        server = new $.jqzabbix(data);
+        server = new jpZabbix(data);
 
-        server.setAuth(data.auth);
+		server.setAuth(data.auth)
 		
 		var apiCall = data.apiCalls.filter(function(a){return table.tableInfo.id == a.id})
 
+		parseEntry = function(entry) {
+			var output = flattenEntry(entry,apiCall[0].method);
 
-        server.sendAjaxRequest(apiCall[0].method+'.get',apiCall[0].params,parseData,errorMethod);
+			tableau.log(output)
+
+			return output;
+		};
+
+		parseData = function (result) {
+			return result.reduce(function(promise,item){
+				return promise.then(function(result){
+					return flattenEntry(item)
+				})
+			},Promise.all());
+			
+        }
+
+		function workMyCollection(arr) {
+			return Promise.all(arr.map(function(item) {
+				return flattenEntry(item).then(table.appendRows);
+			}));    
+		}
+
+		var call = server.api(apiCall[0].method+'.get',apiCall[0].params)
+		call.then(workMyCollection).then().then(doneCallback).catch(errorMethod);
     };
 
-    errorMethod = function(response,status) {
-
-        tableau.abortWithError(response);
+    errorMethod = function(response) {
+		new Promise(function(resolve,reject){
+			tableau.log(response)
+			resolve(response)
+		});
     }
 
     setupConnector = function(callBack) {
-        var options = {
-            'url': $('#url').val().trim(),
-            'user':$('#user').val().trim(),
-            'password':$('#password').val().trim()
+        var apiOpts = {
+            'url': document.getElementById('url').value,
+            'user':document.getElementById('user').value,
+            'password':document.getElementById('password').value
         };
+		
+		options.url = document.getElementById('url').value;   
+		tableau.connectionName = document.getElementById('connectionName').value;
 
-        server = new $.jqzabbix(options);
-        server.getApiVersion();
-        server.userLogin(null,function(r,s){getToken(r,s,callBack)});
-        //tableau.connectionData = JSON.stringify(zabbixConnection);
-        //tableau.connectionName = 'Zabbix';
-        //tableau.submit();
+        server = new jpZabbix(apiOpts);
+        server.init().then(server.getToken).then(authComplete).catch(errorMethod);
     };
 
-    getToken = function(response, status, callBack) {
-        options = {
-            'url': $('#url').val().trim(),
-            'auth': response.result,
-            apiCalls:[]
-        };
-		
-		tableau.connectionName = $('#connectionName').val().trim();
-		
-		$('#connTabs').hide();
-		$('#apiTabs').show();
-		
-		if (callBack) {
-			callBack(options);
-		} else { 
-			return;
-		};
+    authComplete = function(token) {
+		new Promise(function(resolve,reject){
+			options.auth = token
+			document.getElementById('connTabs').style.display = 'none';
+			document.getElementById('apiTabs').style.display = null; 
+			resolve(true)
+		})
 	};
 	
 	submitConnector = function() {
+		options.apiCalls = [];  
 		getAPICalls();
 	};
 
 	getAPICalls = function() {
         for (var i = 1; i <= counter; i++) {
-            options.apiCalls.push({id:i.toString(),alias:$('#alias'+i).val().trim(),description:$('#description'+i).val().trim(),method:$('#method'+i).val().trim(),params:JSON.parse($('#params'+i).val().trim())});
+            options.apiCalls.push({
+				id:i.toString(),
+				alias:document.getElementById('alias'+i).value,
+				description:document.getElementById('description'+i).value,
+				method:document.getElementById('method'+i).value,
+				params:JSON.parse(document.getElementById('params'+i).value)
+				});
         };
 	
         tableau.connectionData = JSON.stringify(options);
@@ -131,7 +252,6 @@
     var counter = 1;
     var limit = 3;
     addTab = function(){
-		console.log('addTab')
           counter++;
           var newdiv = document.createElement('div')
 		  newdiv.id = 'table'+counter+'Tab';
@@ -145,20 +265,189 @@
      }
 	 
 	 changeTab = function(tabName) {
-		 console.log(tabName)
 		 for (var i = 1, len = counter+1; i < len; i++) {
-			$('#table'+i+'Tab').hide();
+			 document.getElementById('#table'+i+'Tab').style.display = 'none'; 
 		 };
-		 $(tabName).show();
+		 document.getElementById(tabName).style.display = null;
 	 };
+	
+	arrayTranslate = {
+		'items':'item'
+	}
 
-    $(document).ready(function () {
-        $("#connect").click(function () {
-            setupConnector();
-        });
-        $('#zabbixForm').submit(function(event) {
-            event.preventDefault();
-            setupConnector();
-        });
-    });
+	selectTranslate = {
+		'selectItems': 'item',
+		'selectGroups':'hostgroup'
+	};
+
+	methods = {
+		action: {
+			actionid: {
+				aggType:tableau.aggTypeEnum.count_dist,
+				alias: 'actionid',
+				columnRole:tableau.columnRoleEnum.dimension,
+				columnType:tableau.columnTypeEnum.discrete,
+				dataType:tableau.dataTypeEnum.int ,
+				description:'Action ID',
+				id:'action_actionid',
+				numberFormat:tableau.numberFormatEnum.number
+			},
+			esc_period: {
+				aggType:tableau.aggTypeEnum.sum,
+				alias: 'esc_period',
+				columnRole:tableau.columnRoleEnum.dimension,
+				columnType:tableau.columnTypeEnum.discrete,
+				dataType:tableau.dataTypeEnum.int ,
+				description:'Escalation Period',
+				id:'action_esc_period',
+				numberFormat:tableau.numberFormatEnum.number
+			},
+			eventsource:{
+				aggType:tableau.aggTypeEnum.avg,
+				alias: 'eventsource',
+				columnRole:tableau.columnRoleEnum.dimension,
+				columnType:tableau.columnTypeEnum.discrete,
+				dataType:tableau.dataTypeEnum.int ,
+				description:'Event Source',
+				id:'action_eventsource',
+				numberFormat:tableau.numberFormatEnum.number
+			}
+		},
+		host: {
+			hostid:{
+				aggType:tableau.aggTypeEnum.count_dist,
+				alias: 'Host ID',
+				columnRole:tableau.columnRoleEnum.dimension,
+				columnType:tableau.columnTypeEnum.discrete,
+				dataType:tableau.dataTypeEnum.int ,
+				description:'ID of the host.',
+				id:'host_hostid',
+				numberFormat:tableau.numberFormatEnum.number
+			},
+			host:{
+				alias: 'Host',
+				columnRole:tableau.columnRoleEnum.dimension,
+				columnType:tableau.columnTypeEnum.discrete,
+				dataType:tableau.dataTypeEnum.string ,
+				description:'Technical name of the host.',
+				id:'host_host' 
+			},
+			available:{
+				alias: 'Available',
+				columnRole:tableau.columnRoleEnum.dimension,
+				columnType:tableau.columnTypeEnum.discrete,
+				dataType:tableau.dataTypeEnum.int ,
+				description:'Availability of Zabbix agent. \n\nPossible values are:\n0 - (default) unknown;\n1 - available;\n2 - unavailable.',
+				id:'host_available',
+				numberFormat:tableau.numberFormatEnum.number
+			},
+			description:{
+				alias: 'Description',
+				columnRole:tableau.columnRoleEnum.dimension,
+				columnType:tableau.columnTypeEnum.discrete,
+				dataType:tableau.dataTypeEnum.string ,
+				description:'Description of the host.',
+				id:'host_description' 
+			},
+			disable_until:{
+				alias: 'Disable Until',
+				columnRole:tableau.columnRoleEnum.dimension,
+				columnType:tableau.columnTypeEnum.discrete,
+				dataType:tableau.dataTypeEnum.int ,
+				description:'The next polling time of an unavailable Zabbix agent.',
+				id:'host:disable_until',
+				numberFormat:tableau.numberFormatEnum.number
+			},
+			error:{
+				alias: 'Error',
+				columnRole:tableau.columnRoleEnum.dimension,
+				columnType:tableau.columnTypeEnum.discrete,
+				dataType:tableau.dataTypeEnum.string ,
+				description:'Error text if Zabbix agent is unavailable.',
+				id:'host_error' 
+			},
+			errors_from:{
+				alias: 'Errors From',
+				columnRole:tableau.columnRoleEnum.dimension,
+				columnType:tableau.columnTypeEnum.discrete,
+				dataType:tableau.dataTypeEnum.int ,
+				description:'Time when Zabbix agent became unavailable.',
+				id:'host_errors_from',
+				numberFormat:tableau.numberFormatEnum.number
+			},
+			flags:{
+				alias: 'Flags',
+				columnRole:tableau.columnRoleEnum.dimension,
+				columnType:tableau.columnTypeEnum.discrete,
+				dataType:tableau.dataTypeEnum.int ,
+				description:'Origin of the host. \n\nPossible values: \n0 - a plain host; \n4 - a discovered host.',
+				id:'host_flags',
+				numberFormat:tableau.numberFormatEnum.number
+			},
+			inventory_mode:{
+				alias: 'Inventory Mode',
+				columnRole:tableau.columnRoleEnum.dimension,
+				columnType:tableau.columnTypeEnum.discrete,
+				dataType:tableau.dataTypeEnum.int ,
+				description:'Host inventory population mode. \n\nPossible values are: \n-1 - disabled; \n0 - (default) manual; \n1 - automatic.',
+				id:'host_inventory_mode',
+				numberFormat:tableau.numberFormatEnum.number
+			},
+			ipmi_authtype:{
+				alias: 'IPMI Auth Type',
+				columnRole:tableau.columnRoleEnum.dimension,
+				columnType:tableau.columnTypeEnum.discrete,
+				dataType:tableau.dataTypeEnum.int ,
+				description:'IPMI authentication algorithm. \n\nPossible values are:\n-1 - (default) default; \n0 - none; \n1 - MD2; \n2 - MD5 \n4 - straight; \n5 - OEM; \n6 - RMCP+.',
+				id:'host_ipmi_authtype',
+				numberFormat:tableau.numberFormatEnum.number
+			},
+			ipmi_available:{
+				alias: 'IPMI Available',
+				columnRole:tableau.columnRoleEnum.dimension,
+				columnType:tableau.columnTypeEnum.discrete,
+				dataType:tableau.dataTypeEnum.int ,
+				description:'Availability of IPMI agent. \n\nPossible values are:\n0 - (default) unknown;\n1 - available;\n2 - unavailable.',
+				id:'host_ipmi_available',
+				numberFormat:tableau.numberFormatEnum.number
+			},
+			ipmi_disable_until:{
+				alias: 'IPMI Disable Until',
+				columnRole:tableau.columnRoleEnum.dimension,
+				columnType:tableau.columnTypeEnum.discrete,
+				dataType:tableau.dataTypeEnum.int ,
+				description:'The next polling time of an unavailable IPMI agent.',
+				id:'host_ipmi_disable_until',
+				numberFormat:tableau.numberFormatEnum.number
+			},
+			ipmi_error:{
+				alias: 'IPMI Error',
+				columnRole:tableau.columnRoleEnum.dimension,
+				columnType:tableau.columnTypeEnum.discrete,
+				dataType:tableau.dataTypeEnum.string ,
+				description:'Error text if IPMI agent is unavailable.',
+				id:'host_ipmi_error' 
+			} 
+		},
+		item:{
+			itemid:{
+				aggType:tableau.aggTypeEnum.count_dist,
+				alias: 'Item ID',
+				columnRole:tableau.columnRoleEnum.dimension,
+				columnType:tableau.columnTypeEnum.discrete,
+				dataType:tableau.dataTypeEnum.int ,
+				description:'ID of the item.',
+				id:'item_itemid',
+				numberFormat:tableau.numberFormatEnum.number
+			},
+			name:{
+				alias: 'Name',
+				columnRole:tableau.columnRoleEnum.dimension,
+				columnType:tableau.columnTypeEnum.discrete,
+				dataType:tableau.dataTypeEnum.string ,
+				description:'Technical name of the Item.',
+				id:'item_name' 
+			}
+		}
+	}
 })();
