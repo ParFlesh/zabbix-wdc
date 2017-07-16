@@ -379,7 +379,7 @@
 				columnType:tableau.columnTypeEnum.discrete,
 				dataType:tableau.dataTypeEnum.int ,
 				description:'The next polling time of an unavailable Zabbix agent.',
-				id:'host:disable_until',
+				id:'host_disable_until',
 				numberFormat:tableau.numberFormatEnum.number
 			},
 			error:{
