@@ -1673,7 +1673,7 @@
 				"alias": "templateids",
 				"columnRole": tableau.columnRoleEnum.dimension,
 				"columnType": tableau.columnTypeEnum.discrete,
-				"dataType": "tableau.dataTypeEnum.array",
+				"dataType": tableau.dataTypeEnum.string,
 				"description": "IDs of the parent template applications.",
 				"id": "application_templateids"
 			}
@@ -1735,7 +1735,7 @@
 				"alias": "conditions",
 				"columnRole": tableau.columnRoleEnum.dimension,
 				"columnType": tableau.columnTypeEnum.discrete,
-				"dataType": "tableau.dataTypeEnum.array",
+				"dataType": tableau.dataTypeEnum.string,
 				"description": "Set of conditions to use for filtering results.",
 				"id": "filter_conditions"
 			},
@@ -3949,7 +3949,7 @@
 				"alias": "conditions",
 				"columnRole": tableau.columnRoleEnum.dimension,
 				"columnType": tableau.columnTypeEnum.discrete,
-				"dataType": "tableau.dataTypeEnum.array",
+				"dataType": tableau.dataTypeEnum.string,
 				"description": "Set of conditions to use for filtering results.",
 				"id": "discoveryrule filter_conditions"
 			},
@@ -4495,7 +4495,7 @@
 				"alias": "urls",
 				"columnRole": tableau.columnRoleEnum.dimension,
 				"columnType": tableau.columnTypeEnum.discrete,
-				"dataType": "tableau.dataTypeEnum.array",
+				"dataType": tableau.dataTypeEnum.string,
 				"description": "Map element URLs. \n\nThe map element URL object is described in detail below.",
 				"id": "map element_urls"
 			},
@@ -4593,7 +4593,7 @@
 				"alias": "linktriggers",
 				"columnRole": tableau.columnRoleEnum.dimension,
 				"columnType": tableau.columnTypeEnum.discrete,
-				"dataType": "tableau.dataTypeEnum.array",
+				"dataType": tableau.dataTypeEnum.string,
 				"description": "Map link triggers to use as link status indicators. \n\nThe map link trigger object is described in detail below.",
 				"id": "map link_linktriggers"
 			},
@@ -6305,7 +6305,7 @@
 				"alias": "mappings",
 				"columnRole": tableau.columnRoleEnum.dimension,
 				"columnType": tableau.columnTypeEnum.discrete,
-				"dataType": "tableau.dataTypeEnum.array",
+				"dataType": tableau.dataTypeEnum.string,
 				"description": "Value mappings for current value map. The mapping object is described in detail below.",
 				"id": "valuemap_mappings"
 			}
