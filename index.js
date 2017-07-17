@@ -1,6 +1,10 @@
 (function () {
     var myConnector = tableau.makeConnector();
 	
+	errorMethod = function(response) {
+		tableau.abortWithError(response)
+    }
+	
 	if (!Object.assign) {
 	  Object.defineProperty(Object, 'assign', {
 		enumerable: false,
@@ -202,13 +206,6 @@
 		var call = server.api(apiCall[0].method+'.get',apiCall[0].params)
 		call.then(workMyCollection).then(doneCallback).catch(errorMethod);
     };
-
-    errorMethod = function(response) {
-		new Promise(function(resolve,reject){
-			tableau.log(response)
-			resolve(response)
-		});
-    }
 
     setupConnector = function(callBack) {
         var apiOpts = {
