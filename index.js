@@ -59,20 +59,8 @@
 			var idRegex = /.*id/i;
 			
 			addColumns = function(method,filter) {
-				//console.log(method,filter)
-				 /*for (var ai = 0, keys = Object.keys(methods[method]), alen = keys.length; ai < alen; ai++) {
-					 if (filter) {
-						 //console.log('filter',filter.indexOf(methods[method][keys[ai]]),keys[ai])
-						 if (filter.indexOf(keys[ai]) != -1 || keys[ai].match(idRegex)) {
-							table.columns.push(methods[method][keys[ai]])
-						 }
-					 } else { 
-						 table.columns.push(methods[method][keys[ai]])
-					 };
-				};*/
 				return Promise.all(Object.keys(methods[method]).map(function(entry){
 					if (filter) {
-						 //console.log('filter',filter.indexOf(methods[method][keys[ai]]),keys[ai])
 						 if (filter.indexOf(entry) != -1 || entry.match(idRegex)) {
 							table.columns.push(methods[method][entry])
 						 }
@@ -113,10 +101,7 @@
 		genTables = function(array) {
 			return Promise.all(array.map(function(entry){
 				return parseApiCall(entry)
-			})).then(function(tables){
-				console.log(tables)
-				return tables
-				})
+			})).then(function(tables){return tables})
 		};
 
 		genTables(data.apiCalls).then(schemaCallback);
@@ -175,7 +160,6 @@
 						tableau.log(arr[item])
 						tableau.log(item)
 						return mergeObject(result,arr[item],item)
-						//return result
                     } else {
 						return addKey(result,item,arr[item],'host');
                     }
