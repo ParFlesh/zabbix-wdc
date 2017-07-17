@@ -47,6 +47,8 @@
 		var tables = [];
 		
 		parseApiCall = function(apiCall) {
+			var jobs = [];
+			
 			var table = {
 				id:apiCall.id,
 				alias:apiCall.alias,
@@ -58,7 +60,7 @@
 			
 			addColumns = function(method,filter) {
 				//console.log(method,filter)
-				 for (var ai = 0, keys = Object.keys(methods[method]), alen = keys.length; ai < alen; ai++) {
+				 /*for (var ai = 0, keys = Object.keys(methods[method]), alen = keys.length; ai < alen; ai++) {
 					 if (filter) {
 						 //console.log('filter',filter.indexOf(methods[method][keys[ai]]),keys[ai])
 						 if (filter.indexOf(keys[ai]) != -1 || keys[ai].match(idRegex)) {
@@ -67,15 +69,26 @@
 					 } else { 
 						 table.columns.push(methods[method][keys[ai]])
 					 };
-				};
+				};*/
+				return Promise.all(Object.keys(methods[method]).map(function(entry){
+					if (filter) {
+						 //console.log('filter',filter.indexOf(methods[method][keys[ai]]),keys[ai])
+						 if (filter.indexOf(entry) != -1 || entry.match(idRegex)) {
+							table.columns.push(methods[method][entry])
+						 }
+					 } else { 
+						 table.columns.push(methods[method][entry])
+					 };
+					 
+				}))
 			};
 			
 			if (apiCall.params.output == 'extend') {
-				addColumns(apiCall.method);
+				jobs.push(addColumns(apiCall.method));
 			} else if (Array.isArray(apiCall.params.output)) {
-				addColumns(apiCall.method,apiCall.params.output);
+				jobs.push(addColumns(apiCall.method,apiCall.params.output));
 			} else {
-				addColumns(apiCall.method);
+				jobs.push(addColumns(apiCall.method));
 			};
 
 			pKeys = Object.keys(apiCall.params)
@@ -85,23 +98,28 @@
 				if (pKeys[pi].match(selectRegex)) {
 					switch (apiCall.params[pKeys[pi]]) {
 						case 'extend':
-							addColumns(selectTranslate[pKeys[pi]]);
+							jobs.push(addColumns(selectTranslate[pKeys[pi]]));
 							break;
 						default:
-							addColumns(selectTranslate[pKeys[pi]],apiCall.params[pKeys[pi]]);
+							jobs.push(addColumns(selectTranslate[pKeys[pi]],apiCall.params[pKeys[pi]]));
 							break;
 					}
 				};
 			};
  
-			return table; 
-		};
+			return Promise.all(jobs).then(function(res){return table}); 
+		};   
 		
-		for (var i = 0, len = data.apiCalls.length; i < len; i++) {
-			tables.push(parseApiCall(data.apiCalls[i]));
+		genTables = function(array) {
+			return Promise.all(array.map(function(entry){
+				return parseApiCall(entry)
+			})).then(function(tables){
+				console.log(tables)
+				return tables
+				})
 		};
 
-		schemaCallback(tables);
+		genTables(data.apiCalls).then(schemaCallback);
 	};
 
     myConnector.getData = function (table, doneCallback) {
