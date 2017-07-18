@@ -62,10 +62,14 @@
 				return Promise.all(Object.keys(methods[method]).map(function(entry){
 					if (filter) {
 						 if (filter.indexOf(entry) != -1 || entry.match(idRegex)) {
-							table.columns.push(methods[method][entry])
+							 var col = Object.assign({},methods[method][entry])
+							 col.id = table.id+'_'+col.id
+							table.columns.push(col)
 						 }
 					 } else { 
-						 table.columns.push(methods[method][entry])
+						var col = Object.assign({},methods[method][entry])
+						 col.id = table.id+'_'+col.id
+						 table.columns.push(col)
 					 };
 					 
 				}))
@@ -131,7 +135,7 @@
 			var keys = Object.keys(object)
 			var new_object = {};
 			return Promise.all(keys.map(function(item){
-					new_object[subKey+'_'+item] = object[item]
+					new_object[table.tableInfo.id+'_'+subKey+'_'+item] = object[item]
 					return new_object;
 			})).then(function(res){
 				return Promise.resolve(new_object)
@@ -141,7 +145,7 @@
 		addKey = function(array,key,value,subKey) {
 			return array.reduce(function(promise,item) {
 				return promise.then(function(result) {
-					item[subKey+'_'+key] = value
+					item[table.tableInfo.id+'_'+subKey+'_'+key] = value
 					result.push(item)
 					return result
 				})
@@ -156,12 +160,9 @@
 					if (Array.isArray(arr[item])) {
 						return mergeArrays(result,arr[item],arrayTranslate[item])
                     } else if (typeof arr[item] == 'object') {
-						tableau.log(result)
-						tableau.log(arr[item])
-						tableau.log(item)
 						return mergeObject(result,arr[item],item)
                     } else {
-						return addKey(result,item,arr[item],'host');
+						return addKey(result,item,arr[item],apiCall[0].method);
                     }
 				});        
 			}, Promise.resolve([{}]));
@@ -177,8 +178,6 @@
 
 		parseEntry = function(entry) {
 			var output = flattenEntry(entry,apiCall[0].method);
-
-			tableau.log(output)
 
 			return output;
 		};
@@ -203,7 +202,7 @@
 				return flattenEntry(item).then(table.appendRows);
 			}));    
 		}
-		
+
 		tableau.reportProgress('Making '+apiCall[0].method+' API call')
 		var call = server.api(apiCall[0].method+'.get',apiCall[0].params)
 		call.then(workMyCollection).then(doneCallback).catch(errorMethod);
@@ -6412,7 +6411,7 @@
 				"columnRole": tableau.columnRoleEnum.dimension,
 				"columnType": tableau.columnTypeEnum.discrete,
 				"dataType": tableau.dataTypeEnum.string,
-				"description": "Proxy that will be used by the web scenario given as http://[username[:password]@]proxy.example.com[:port].",
+				"description": "Proxy that will be used by the web scenario given as http:[username[:password]@]proxy.example.com[:port].",
 				"id": "httptest_http_proxy"
 			},
 			"http_user": {
