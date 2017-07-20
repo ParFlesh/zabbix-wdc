@@ -1,2 +1,2 @@
 # zabbix-wdc
-Tableau Web Data Connector for Zabbix using [jqzabbix](https://github.com/kodai/jqzabbix) by [kodai](https://github.com/kodai)
+Tableau Web Data Connector for Zabbix using [jpZabbix](https://github.com/ParFlesh/jpZabbix) by [ParFlesh](https://github.com/ParFlesh)
