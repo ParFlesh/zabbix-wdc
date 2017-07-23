@@ -62,7 +62,7 @@
 				return Promise.all(Object.keys(methods[method]).map(function(entry){
 					if (filter) {
 						 if (filter.indexOf(entry) != -1 || entry.match(idRegex)) {
-							 var col = Object.assign({}{columnRole:tableau.columnRoleEnum.dimension,columnType:tableau.columnTypeEnum.discrete},methods[method][entry])
+							 var col = Object.assign({},{columnRole:tableau.columnRoleEnum.dimension,columnType:tableau.columnTypeEnum.discrete},methods[method][entry])
 							 col.id = table.id+'_'+col.id
 							table.columns.push(col)
 						 }
