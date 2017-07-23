@@ -67,7 +67,7 @@
 							table.columns.push(col)
 						 }
 					 } else { 
-						var col = Object.assign({},methods[method][entry])
+						var col = Object.assign({},{columnRole:tableau.columnRoleEnum.dimension,columnType:tableau.columnTypeEnum.discrete},methods[method][entry])
 						 col.id = table.id+'_'+col.id
 						 table.columns.push(col)
 					 };
