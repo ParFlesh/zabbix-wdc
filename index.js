@@ -291,7 +291,8 @@
 		'screens':'screen',
 		'triggers':'trigger',
 		'hosts':'host',
-		'itemDiscovery':'itemdiscovery'
+		'itemDiscovery':'itemdiscovery',
+		'acknowledges':'acknowledges'
 	}
 
 	selectTranslate = {
@@ -310,7 +311,8 @@
 		'selectScreens':'screen',
 		'selectTriggers':'trigger',
 		'selectHosts':'host',
-		'selectItemDiscovery':'discoveryrule'
+		'selectItemDiscovery':'discoveryrule',
+		'select_acknowledges':'acknowledges'
 	};
 
 	methods = {
@@ -2235,6 +2237,72 @@
 				"dataType": tableau.dataTypeEnum.int,
 				"description": "User ID if the event was manually closed.",
 				"id": "event_userid"
+			}
+		},
+		'acknowledges': {
+			"acknowledgeid": {
+				"alias": "acknowledgeid",
+				"columnRole": tableau.columnRoleEnum.dimension,
+				"columnType": tableau.columnTypeEnum.discrete,
+				"dataType": tableau.dataTypeEnum.int,
+				"description": "acknowledgement's ID",
+				"id": "acknowledges_acknowledgeid"
+			},
+			"userid": {
+				"alias": "userid",
+				"columnRole": tableau.columnRoleEnum.dimension,
+				"columnType": tableau.columnTypeEnum.discrete,
+				"dataType": tableau.dataTypeEnum.int,
+				"description": "ID of the user that acknowledged the event",
+				"id": "acknowledges_userid"
+			},
+			"eventid": {
+				"alias": "eventid",
+				"columnRole": tableau.columnRoleEnum.dimension,
+				"columnType": tableau.columnTypeEnum.discrete,
+				"dataType": tableau.dataTypeEnum.int,
+				"description": "ID of the acknowledged event",
+				"id": "acknowledges_eventid"
+			},
+			"clock": {
+				"alias": "clock",
+				"columnRole": tableau.columnRoleEnum.dimension,
+				"columnType": tableau.columnTypeEnum.discrete,
+				"dataType": tableau.dataTypeEnum.int,
+				"description":  "time when the event was acknowledged",
+				"id": "acknowledges_clock"
+			},
+			"message": {
+				"alias": "message",
+				"columnRole": tableau.columnRoleEnum.dimension,
+				"columnType": tableau.columnTypeEnum.discrete,
+				"dataType": tableau.dataTypeEnum.string,
+				"description": "text of the acknowledgement message",
+				"id": "acknowledges_message"
+			},
+			"alias": {
+				"alias": "alias",
+				"columnRole": tableau.columnRoleEnum.dimension,
+				"columnType": tableau.columnTypeEnum.discrete,
+				"dataType": tableau.dataTypeEnum.string,
+				"description": "alias of the user that acknowledged the event",
+				"id": "acknowledges_alias"
+			},
+			"name": {
+				"alias": "name",
+				"columnRole": tableau.columnRoleEnum.dimension,
+				"columnType": tableau.columnTypeEnum.discrete,
+				"dataType": tableau.dataTypeEnum.string,
+				"description": "name of the user that acknowledged the event",
+				"id": "acknowledges_name"
+			},
+			"surname": {
+				"alias": "surname",
+				"columnRole": tableau.columnRoleEnum.dimension,
+				"columnType": tableau.columnTypeEnum.discrete,
+				"dataType": tableau.dataTypeEnum.string,
+				"description": "surname of the user that acknowledged the event",
+				"id": "acknowledges_surname"
 			}
 		},
 		"graph": {
