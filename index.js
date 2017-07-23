@@ -2,7 +2,7 @@
     var myConnector = tableau.makeConnector();
 	
 	errorMethod = function(response) {
-		tableau.abortWithError(response)
+		tableau.abortWithError(JSON.stringify(response))
     }
 	
 	if (!Object.assign) {
@@ -196,18 +196,18 @@
         }
 		
 		appendRows = function(result){
-			tableau.reportProgress('Appending '+result.length+' rows')
+			if (tableau.reportProgress) {tableau.reportProgress('Appending '+result.length+' rows')}
 			table.appendRows(result)
 		}
 
 		function workMyCollection(arr) {
-			tableau.reportProgress('Completed '+apiCall[0].method+' API Call')
+			if (tableau.reportProgress) {tableau.reportProgress('Completed '+apiCall[0].method+' API Call')}
 			return Promise.all(arr.map(function(item) {
 				return flattenEntry(item).then(table.appendRows);
 			}));    
 		}
 
-		tableau.reportProgress('Making '+apiCall[0].method+' API call')
+		if (tableau.reportProgress) {tableau.reportProgress('Making '+apiCall[0].method+' API call')}
 		var call = server.api(apiCall[0].method+'.get',apiCall[0].params)
 		call.then(workMyCollection).then(doneCallback).catch(errorMethod);
     };
