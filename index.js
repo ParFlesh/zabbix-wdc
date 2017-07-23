@@ -158,7 +158,11 @@
 			return iKeys.reduce(function(promise, item) {
 				return promise.then(function(result) {
 					if (Array.isArray(arr[item])) {
-						return mergeArrays(result,arr[item],arrayTranslate[item])
+						if (arr[item].length > 0) {
+							return mergeArrays(result,arr[item],arrayTranslate[item])
+						} else {
+							return Promise.resolve(result);
+						};
                     } else if (typeof arr[item] == 'object') {
 						return mergeObject(result,arr[item],item)
                     } else {
