@@ -64,11 +64,13 @@
 						 if (filter.indexOf(entry) != -1 || entry.match(idRegex)) {
 							 var col = Object.assign({},{columnRole:tableau.columnRoleEnum.dimension,columnType:tableau.columnTypeEnum.discrete},methods[method][entry])
 							 col.id = table.id+'_'+col.id
+							 col.alias = '['+table.alias+'] ('+method+') '+col.alias
 							table.columns.push(col)
 						 }
 					 } else { 
 						var col = Object.assign({},{columnRole:tableau.columnRoleEnum.dimension,columnType:tableau.columnTypeEnum.discrete},methods[method][entry])
 						 col.id = table.id+'_'+col.id
+							col.alias = '['+table.alias+' ('+method+')] '+col.alias
 						 table.columns.push(col)
 					 };
 					 
