@@ -296,7 +296,8 @@
 		'triggers':'trigger',
 		'hosts':'host',
 		'itemDiscovery':'itemdiscovery',
-		'acknowledges':'acknowledges'
+		'acknowledges':'acknowledges',
+		'alerts':'alert'
 	}
 
 	selectTranslate = {
@@ -316,10 +317,97 @@
 		'selectTriggers':'trigger',
 		'selectHosts':'host',
 		'selectItemDiscovery':'discoveryrule',
-		'select_acknowledges':'acknowledges'
+		'select_acknowledges':'acknowledges',
+		'select_alerts':'alert'
 	};
 
 	methods = {
+		alert: {
+			alertid:{
+				aggType:tableau.aggTypeEnum.count_dist,
+				alias: 'Alert ID',
+				dataType:tableau.dataTypeEnum.int ,
+				description:'Alert ID',
+				id:'alert_alertid',
+				numberFormat:tableau.numberFormatEnum.number
+			},
+			actionid:{
+				aggType:tableau.aggTypeEnum.count_dist,
+				alias: 'Action ID',
+				dataType:tableau.dataTypeEnum.int ,
+				description:'Action ID',
+				id:'alert_actionid',
+				numberFormat:tableau.numberFormatEnum.number
+			},
+			alerttype:{
+				aggType:tableau.aggTypeEnum.count_dist,
+				alias: 'Alert Type',
+				dataType:tableau.dataTypeEnum.int ,
+				description:'Alert type',
+				id:'alert_alerttype',
+				numberFormat:tableau.numberFormatEnum.number
+			},
+			clock:{
+				aggType:tableau.aggTypeEnum.count_dist,
+				alias: 'Clock',
+				dataType:tableau.dataTypeEnum.int ,
+				description:'Clock',
+				id:'alert_clock',
+				numberFormat:tableau.numberFormatEnum.number
+			},
+			error:{
+				alias: 'Error',
+				dataType:tableau.dataTypeEnum.string ,
+				description:'Error',
+				id:'alert_error'
+			},
+			esc_step:{
+				alias: 'Escalation Step',
+				dataType:tableau.dataTypeEnum.int ,
+				description:'Escalation Step',
+				id:'alert_esc_step'
+			},
+			eventid:{
+				alias: 'Event ID',
+				dataType:tableau.dataTypeEnum.int,
+				id:'alert_eventid'
+			},
+			mediatypeid:{
+				alias: 'Media Type ID',
+				dataType:tableau.dataTypeEnum.int,
+				id:'alert_mediatypeid'
+			},
+			message:{
+				alias: 'Message',
+				dataType:tableau.dataTypeEnum.string,
+				id:'alert_message'
+			},
+			retries:{
+				alias: 'Retries',
+				dataType:tableau.dataTypeEnum.int,
+				id:'alert_retries'
+			},
+			sendto:{
+				alias: 'Send To',
+				dataType:tableau.dataTypeEnum.string,
+				id:'alert_sendto'
+			},
+			status:{
+				alias: 'Status',
+				dataType:tableau.dataTypeEnum.int,
+				id:'alert_status'
+			},
+			subject:{
+				alias: 'Subject',
+				dataType:tableau.dataTypeEnum.string,
+				id:'alert_subject'
+			},
+			userid:{
+				alias: 'User ID',
+				dataType:tableau.dataTypeEnum.int,
+				id:'alert_userid'
+			}
+		},
 		action: {
 			actionid: {
 				aggType:tableau.aggTypeEnum.count_dist,
@@ -344,6 +432,41 @@
 				description:'Event Source',
 				id:'action_eventsource',
 				numberFormat:tableau.numberFormatEnum.number
+			},
+			name:{
+				alias: 'Name',
+				dataType:tableau.dataTypeEnum.string,
+				id:'action_name'
+			},
+			def_longdata:{
+				alias: 'Problem message text',
+				dataType:tableau.dataTypeEnum.string,
+				id:'action_dev_longdata'
+			},
+			def_shortdata:{
+				alias: 'Problem message subject',
+				dataType:tableau.dataTypeEnum.string,
+				id:'action_def_shortdata'
+			},
+			r_longdata:{
+				alias: 'Recovery message text',
+				dataType:tableau.dataTypeEnum.string,
+				id:'action_r_longdata'
+			},
+			r_shortdata:{
+				alias: 'Recovery message subject',
+				dataType:tableau.dataTypeEnum.string,
+				id:'action_r_shortdata'
+			},
+			status:{
+				alias: 'Status',
+				dataType:tableau.dataTypeEnum.int,
+				id:'action_status'
+			},
+			maintenance_mode:{
+				alias: 'Maintenance Mode',
+				dataType:tableau.dataTypeEnum.int,
+				id:'action_maintenance_mode'
 			}
 		},
 		host: {
