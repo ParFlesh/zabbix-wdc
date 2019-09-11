@@ -58,8 +58,13 @@
 			
 			var idRegex = /.*id/i;
 			
-			addColumns = function(method,filter) {
-				return Promise.all(Object.keys(methods[method]).map(function(entry){
+			addColumns = function(method,submethod,filter) {
+			    if (submentod != null) {
+			        var method_cols = methods[method][submethod]
+			    } else {
+			        var method_cols = methods[method]
+			    }
+				return Promise.all(Object.keys(method_cols).map(function(entry){
 					if (filter) {
 						 if (filter.indexOf(entry) != -1 || entry.match(idRegex)) {
 							 var col = Object.assign({},{columnRole:tableau.columnRoleEnum.dimension,columnType:tableau.columnTypeEnum.discrete},methods[method][entry])
@@ -76,11 +81,34 @@
 					 
 				}))
 			};
-			
+
+			if ("history" == apiCall.method) {
+			    switch(apiCall.params.history) {
+                  case 0:
+                    var submethod = "float"
+                    break;
+                  case 1:
+                    var submethod = "string"
+                    break;
+                  case 2:
+                    var submethod = "log"
+                    break;
+                  case 3:
+                    var submethod = "int"
+                    break;
+                  case 4:
+                    var submethod = "text"
+                    break;
+                  default:
+                    var submethod = "int"
+                }
+			} else {
+			    var submethod = null
+			}
 			if (apiCall.params.output == 'extend') {
 				jobs.push(addColumns(apiCall.method));
 			} else if (Array.isArray(apiCall.params.output)) {
-				jobs.push(addColumns(apiCall.method,apiCall.params.output));
+				jobs.push(addColumns(apiCall.method,submethod,apiCall.params.output));
 			} else {
 				jobs.push(addColumns(apiCall.method));
 			};
