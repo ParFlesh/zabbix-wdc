@@ -106,11 +106,11 @@
 			    var submethod = null
 			}
 			if (apiCall.params.output == 'extend') {
-				jobs.push(addColumns(apiCall.method));
+				jobs.push(addColumns(apiCall.method,submethod));
 			} else if (Array.isArray(apiCall.params.output)) {
 				jobs.push(addColumns(apiCall.method,submethod,apiCall.params.output));
 			} else {
-				jobs.push(addColumns(apiCall.method));
+				jobs.push(addColumns(apiCall.method,submethod));
 			};
 
 			pKeys = Object.keys(apiCall.params)
