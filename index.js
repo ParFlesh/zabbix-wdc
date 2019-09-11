@@ -67,13 +67,13 @@
 				return Promise.all(Object.keys(method_cols).map(function(entry){
 					if (filter) {
 						 if (filter.indexOf(entry) != -1 || entry.match(idRegex)) {
-							 var col = Object.assign({},{columnRole:tableau.columnRoleEnum.dimension,columnType:tableau.columnTypeEnum.discrete},methods[method][entry])
+							 var col = Object.assign({},{columnRole:tableau.columnRoleEnum.dimension,columnType:tableau.columnTypeEnum.discrete},method_cols[entry])
 							 col.id = table.id+'_'+col.id
 							 col.alias = '['+table.alias+'] ('+method+') '+col.alias
 							table.columns.push(col)
 						 }
 					 } else { 
-						var col = Object.assign({},{columnRole:tableau.columnRoleEnum.dimension,columnType:tableau.columnTypeEnum.discrete},methods[method][entry])
+						var col = Object.assign({},{columnRole:tableau.columnRoleEnum.dimension,columnType:tableau.columnTypeEnum.discrete},method_cols[entry])
 						 col.id = table.id+'_'+col.id
 							col.alias = '['+table.alias+' ('+method+')] '+col.alias
 						 table.columns.push(col)
@@ -380,7 +380,7 @@
 			hostid:{
 				aggType:tableau.aggTypeEnum.count_dist,
 				alias: 'Host ID',
-				dataType:tableau.dataTypeEnum.int ,
+				dataType:tableau.dataTypeEnum.int,
 				description:'ID of the host.',
 				id:'host_hostid',
 				numberFormat:tableau.numberFormatEnum.number
