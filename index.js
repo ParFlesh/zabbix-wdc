@@ -59,7 +59,7 @@
 			var idRegex = /.*id/i;
 			
 			addColumns = function(method,submethod,filter) {
-			    if (submentod != null) {
+			    if (submethod != null) {
 			        var method_cols = methods[method][submethod]
 			    } else {
 			        var method_cols = methods[method]
