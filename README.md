@@ -27,7 +27,6 @@ When you have added all the needed api calls/tables click `Submit`.  If there ar
 
     
 	
-### Donations
+### Errors
 
-If you feel I deserve it feel free to donate a coffee.   
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=UMKJNJLERCFX2)
+`{"code":0,"data":"","message":""}` is caused by the web data connector not being able to connect to the supplied URL.
