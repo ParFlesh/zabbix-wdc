@@ -2,7 +2,13 @@
     var myConnector = tableau.makeConnector();
 	
 	errorMethod = function(response) {
-		tableau.abortWithError(String(response));
+		if (typeof response === 'object') {
+			tableau.abortWithError(JSON.stringify(response));
+		} else if (response === null || typeof val === 'function') {
+			tableau.abortWithError('null or non-reportable error');
+		} else {
+			tableau.abortWithError(String(response));
+		}
     }
 	
 	if (!Object.assign) {
